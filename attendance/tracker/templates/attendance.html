@@ -112,7 +112,7 @@
                         <td>{{ record.student.rfid_uid }}</td>
                         <td>{{ record.student.user.get_full_name }}</td>
                         <td>
-                            <span class="status-time">{{ record.date|date:"H:i" }}</span>
+                            <span class="status-time">{{ record.timestamp|date:"H:i" }}</span>
                         </td>
                         <td>
                             <span class="status-badge {% if record.status == 'Present' %}status-present{% else %}status-absent{% endif %}">

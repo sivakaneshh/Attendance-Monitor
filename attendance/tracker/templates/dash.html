@@ -96,7 +96,7 @@
                     {% for record in records %}
                     <tr>
                         <td>{{ record.student }}</td>
-                        <td>{{ record.date|date:"H:i" }}</td>
+                        <td>{{ record.date|date:"Y-m-d" }}</td>
                         <td>
                             <span class="status-badge {% if record.status == 'Present' %}status-present{% else %}status-absent{% endif %}">
                                 {{ record.status }}
@@ -111,7 +111,7 @@
 
     <script>
         // Weekly attendance chart
-        const weeklyData = {{ week_stats|safe }};
+        const weeklyData = JSON.parse('{{ week_stats|escapejs }}');
         const ctx = document.getElementById('weeklyChart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',

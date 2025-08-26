@@ -24,6 +24,7 @@ class Attendance(models.Model):
     ]
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     date = models.DateField(default=date.today)
+    timestamp = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Absent')
 
     class Meta:

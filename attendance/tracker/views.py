@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
 from .models import Attendance, Student, Holiday
 from datetime import date, timedelta
+import json
 
 def is_admin(user):
     """Check if user is admin or staff"""
@@ -55,7 +56,7 @@ def attendance(request):
             if existing_record:
                 messages.info(
                     request, 
-                    f'Attendance already marked for {student.user.get_full_name()} at {existing_record.date.strftime("%H:%M")}'
+                    f'Attendance already marked for {student.user.get_full_name()} today'
                 )
             else:
                 # Mark attendance
@@ -137,7 +138,7 @@ def dashboard(request):
         'absent_count': today_stats['absent_count'],
         'attendance_rate': round(attendance_rate, 1),
         'records': recent_records,
-        'week_stats': week_stats,
+        'week_stats': json.dumps(week_stats),
     }
     
     return render(request, "dash.html", context)
