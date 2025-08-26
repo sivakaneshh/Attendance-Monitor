@@ -1,0 +1,30 @@
+<!-- attendance/templates/dashboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Attendance Dashboard</title>
+  <link rel="stylesheet" href="/static/tracker/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>Attendance for {{ today }}</h1>
+    <form method="post" action="">
+      {% csrf_token %}
+      <input type="text" name="student_id" placeholder="Enter ID number" required>
+      <button type="submit">Mark Attendance</button>
+    </form>
+    <table>
+      <tr>
+        <th>Student</th>
+        <th>Status</th>
+      </tr>
+      {% for record in records %}
+      <tr>
+        <td>{{ record.student }}</td>
+        <td>{{ record.status }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</body>
+</html>
