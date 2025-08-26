@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance</title>
+    <link rel="stylesheet" href="/static/tracker/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .attendance-card {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        .status-time {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="dashboard-header">
+            <div class="header-title">
+                <h1>Mark Attendance</h1>
+                <p class="text-secondary">{{ today|date:"l, F j, Y" }}</p>
+            </div>
+            {% if user.is_staff or user.is_superuser %}
+            <div class="header-actions">
+                <a href="{% url 'dashboard' %}" class="btn-link">View Dashboard</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <style>
+            .header-actions {
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+            }
+            .btn-link {
+                color: var(--primary);
+                text-decoration: none;
+                font-weight: 500;
+                padding: 0.5rem 1rem;
+                border-radius: 0.5rem;
+                transition: background-color 0.2s;
+            }
+            .btn-link:hover {
+                background: #e0e7ff;
+            }
+        </style>
+
+        <!-- Attendance Form -->
+        <div class="attendance-card">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form class="attendance-form" method="post" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="text" 
+                           name="student_id" 
+                           class="attendance-input" 
+                           placeholder="Scan or Enter Student ID" 
+                           required 
+                           autofocus
+                           autocomplete="off">
+                    <button type="submit" class="btn-submit">Mark Attendance</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Recent Attendance Table -->
+        <div class="attendance-table">
+            <h2>Today's Attendance</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.student.rfid_uid }}</td>
+                        <td>{{ record.student.user.get_full_name }}</td>
+                        <td>
+                            <span class="status-time">{{ record.date|date:"H:i" }}</span>
+                        </td>
+                        <td>
+                            <span class="status-badge {% if record.status == 'Present' %}status-present{% else %}status-absent{% endif %}">
+                                {{ record.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            No attendance records for today yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Auto-reset form after submission
+        document.querySelector('.attendance-form').addEventListener('submit', function() {
+            setTimeout(() => {
+                this.reset();
+                this.querySelector('input[name="student_id"]').focus();
+            }, 100);
+        });
+
+        // Auto-hide alerts after 3 seconds
+        document.querySelectorAll('.alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s';
+                setTimeout(() => alert.remove(), 500);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
