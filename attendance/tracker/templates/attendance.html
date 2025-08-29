@@ -96,25 +96,25 @@
 
         <!-- Recent Attendance Table -->
         <div class="attendance-table">
-            <h2>Today's Attendance</h2>
+            <h2 style="padding:10px 30px">Today's Attendance</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Student ID</th>
-                        <th>Student Name</th>
-                        <th>Time</th>
-                        <th>Status</th>
+                        <th style="text-align: center;">Student ID</th>
+                        <th style="text-align: center;">Student Name</th>
+                        <th style="text-align: center;">Time</th>
+                        <th style="text-align: center;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for record in records %}
                     <tr>
-                        <td>{{ record.student.rfid_uid }}</td>
-                        <td>{{ record.student.user.get_full_name }}</td>
-                        <td>
+                        <td style="text-align: center;">{{ record.student.rfid_uid }}</td>
+                        <td style="text-align: center;">{{ record.student.user.get_full_name }}</td>
+                        <td style="text-align: center;">
                             <span class="status-time">{{ record.timestamp|date:"H:i" }}</span>
                         </td>
-                        <td>
+                        <td style="text-align: center;">
                             <span class="status-badge {% if record.status == 'Present' %}status-present{% else %}status-absent{% endif %}">
                                 {{ record.status }}
                             </span>

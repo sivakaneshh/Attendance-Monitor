@@ -82,22 +82,22 @@
         </div>
 
         <!-- Recent Records -->
-        <div class="attendance-table">
-            <h3>Recent Attendance Records</h3>
+        <div class="attendance-table" style="margin:40px 0px">
+            <h3 style="padding:10px 20px">Recent Attendance Records</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Student Name</th>
-                        <th>Time</th>
-                        <th>Status</th>
+                        <th style="text-align: center;">Student Name</th>
+                        <th style="text-align: center;">Time</th>
+                        <th style="text-align: center;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for record in records %}
                     <tr>
-                        <td>{{ record.student }}</td>
-                        <td>{{ record.date|date:"Y-m-d" }}</td>
-                        <td>
+                        <td style="text-align: center;">{{ record.date|date:"Y-m-d" }}</td>
+                        <td style="text-align: center;">{{ record.student }}</td>
+                        <td style="text-align: center;">
                             <span class="status-badge {% if record.status == 'Present' %}status-present{% else %}status-absent{% endif %}">
                                 {{ record.status }}
                             </span>
