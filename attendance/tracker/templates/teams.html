@@ -113,7 +113,7 @@
         <div class="dashboard-header">
             <div class="header-title">
                 <h1>Team Management</h1>
-                <p class="text-secondary">Create and manage teams (Max: 25 teams)</p>
+                <p class="text-secondary">Create and manage teams</p>
             </div>
             <div class="header-actions">
                 <a href="{% url 'dashboard' %}" class="btn-link">Dashboard</a>
@@ -161,7 +161,7 @@
                 <button type="submit" class="btn-submit">Create Team</button>
             </form>
 
-            <h2>All Teams ({{ teams.count }}/25)</h2>
+            <h2>All Teams ({{ teams.count }})</h2>
             {% for team in teams %}
             <div class="team-card">
                 <div class="team-info">

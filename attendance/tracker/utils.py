@@ -11,12 +11,6 @@ class TeamValidator:
     """Validation utilities for team operations."""
 
     @staticmethod
-    def validate_team_limit():
-        """Check if we can create more teams (max 25)."""
-        if Team.objects.count() >= 25:
-            raise ValidationError("Maximum of 25 teams already reached.")
-
-    @staticmethod
     def validate_team_capacity(team):
         """Check if team can accept more students (max 6)."""
         if team.students.count() >= 6:
@@ -124,9 +118,6 @@ class RegistrationService:
         Raises:
             ValidationError: If validation fails
         """
-        # Validate team limit
-        TeamValidator.validate_team_limit()
-
         # Create team
         team = Team.objects.create(team_name=team_name)
         return team
