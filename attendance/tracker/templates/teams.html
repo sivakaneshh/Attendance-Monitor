@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/tracker/dashboard.css">
+    <style>
+        .team-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--surface);
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .team-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .team-form input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .team-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-dark);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .team-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .team-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-primary);
+        }
+
+        .team-info p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .team-status {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-complete {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-incomplete {
+            background: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="header-title">
+                <h1>Team Management</h1>
+                <p class="text-secondary">Create and manage teams (Max: 25 teams)</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'dashboard' %}" class="btn-link">Dashboard</a>
+                <a href="{% url 'register_student' %}" class="btn-link">Register Students</a>
+                <a href="{% url 'attendance' %}" class="btn-link">Attendance</a>
+            </div>
+        </div>
+
+        <style>
+            .header-actions {
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+            }
+            .btn-link {
+                color: var(--primary);
+                text-decoration: none;
+                font-weight: 500;
+                padding: 0.5rem 1rem;
+                border-radius: 0.5rem;
+                transition: background-color 0.2s;
+            }
+            .btn-link:hover {
+                background: #e0e7ff;
+            }
+        </style>
+
+        <div class="team-container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <h2>Create New Team</h2>
+            <form class="team-form" method="post">
+                {% csrf_token %}
+                <input type="text" 
+                       name="team_name" 
+                       placeholder="Enter team name" 
+                       required 
+                       autofocus>
+                <button type="submit" class="btn-submit">Create Team</button>
+            </form>
+
+            <h2>All Teams ({{ teams.count }}/25)</h2>
+            {% for team in teams %}
+            <div class="team-card">
+                <div class="team-info">
+                    <h3>{{ team.team_name }}</h3>
+                    <p>{{ team.student_count }}/6 students registered</p>
+                </div>
+                <div class="team-status {% if team.is_complete %}status-complete{% else %}status-incomplete{% endif %}">
+                    {% if team.is_complete %}
+                        ✓ Complete
+                    {% else %}
+                        {{ team.student_count }}/6
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <p style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                No teams created yet. Create your first team above!
+            </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Auto-hide alerts after 3 seconds
+        document.querySelectorAll('.alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s';
+                setTimeout(() => alert.remove(), 500);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

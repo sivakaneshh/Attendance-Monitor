@@ -17,6 +17,7 @@
                 <p class="text-secondary">{{ today|date:"l, F j, Y" }}</p>
             </div>
             <div class="header-actions">
+                <a href="{% url 'teams' %}" class="btn-link">Manage Teams</a>
                 <a href="{% url 'register_student' %}" class="btn-link">Student Registration</a>
                 <a href="{% url 'attendance' %}" class="btn-link">Mark Attendance</a>
                 <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
@@ -88,6 +89,7 @@
                 <thead>
                     <tr>
                         <th style="text-align: center;">Student Name</th>
+                        <th style="text-align: center;">Team</th>
                         <th style="text-align: center;">Time</th>
                         <th style="text-align: center;">Status</th>
                     </tr>
@@ -95,12 +97,19 @@
                 <tbody>
                     {% for record in records %}
                     <tr>
-                        <td style="text-align: center;">{{ record.date|date:"Y-m-d" }}</td>
-                        <td style="text-align: center;">{{ record.student }}</td>
+                        <td style="text-align: center;">{{ record.student.name }}</td>
+                        <td style="text-align: center;">{{ record.student.team.team_name }}</td>
+                        <td style="text-align: center;">{{ record.created_at|date:"H:i:s" }}</td>
                         <td style="text-align: center;">
-                            <span class="status-badge {% if record.status == 'Present' %}status-present{% else %}status-absent{% endif %}">
+                            <span class="status-badge {% if record.status == 'IN' %}status-present{% else %}status-absent{% endif %}">
                                 {{ record.status }}
                             </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">
+                            No recent attendance records.
                         </td>
                     </tr>
                     {% endfor %}
@@ -108,41 +117,5 @@
             </table>
         </div>
     </div>
-
-    <script>
-        // Weekly attendance chart
-        const weeklyData = JSON.parse('{{ week_stats|escapejs }}');
-        const ctx = document.getElementById('weeklyChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: weeklyData.map(day => day.date),
-                datasets: [{
-                    label: 'Attendance',
-                    data: weeklyData.map(day => (day.present / day.total * 100 || 0).toFixed(1)),
-                    backgroundColor: '#2563eb',
-                    borderRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        title: {
-                            display: true,
-                            text: 'Attendance Rate (%)'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-    </script>
 </body>
 </html>

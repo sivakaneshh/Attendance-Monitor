@@ -43,11 +43,11 @@
                 <h1>Mark Attendance</h1>
                 <p class="text-secondary">{{ today|date:"l, F j, Y" }}</p>
             </div>
-            {% if user.is_staff or user.is_superuser %}
             <div class="header-actions">
-                <a href="{% url 'dashboard' %}" class="btn-link">View Dashboard</a>
+                <a href="{% url 'dashboard' %}" class="btn-link">Dashboard</a>
+                <a href="{% url 'teams' %}" class="btn-link">Manage Teams</a>
+                <a href="{% url 'register_student' %}" class="btn-link">Register Students</a>
             </div>
-            {% endif %}
         </div>
 
         <style>
@@ -110,12 +110,12 @@
                     {% for record in records %}
                     <tr>
                         <td style="text-align: center;">{{ record.student.rfid_uid }}</td>
-                        <td style="text-align: center;">{{ record.student.user.get_full_name }}</td>
+                        <td style="text-align: center;">{{ record.student.name }}</td>
                         <td style="text-align: center;">
-                            <span class="status-time">{{ record.timestamp|date:"H:i" }}</span>
+                            <span class="status-time">{{ record.created_at|date:"H:i:s" }}</span>
                         </td>
                         <td style="text-align: center;">
-                            <span class="status-badge {% if record.status == 'Present' %}status-present{% else %}status-absent{% endif %}">
+                            <span class="status-badge {% if record.status == 'IN' %}status-present{% else %}status-absent{% endif %}">
                                 {{ record.status }}
                             </span>
                         </td>

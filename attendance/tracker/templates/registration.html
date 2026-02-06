@@ -33,7 +33,8 @@
             color: var(--text-primary);
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             padding: 0.75rem 1rem;
             border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
@@ -41,7 +42,8 @@
             transition: border-color 0.2s;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: var(--primary);
         }
@@ -92,8 +94,33 @@
         <div class="dashboard-header">
             <div class="header-title">
                 <h1>Student Registration</h1>
+                <p class="text-secondary">Register students to teams</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'dashboard' %}" class="btn-link">Dashboard</a>
+                <a href="{% url 'teams' %}" class="btn-link">Manage Teams</a>
+                <a href="{% url 'attendance' %}" class="btn-link">Attendance</a>
             </div>
         </div>
+
+        <style>
+            .header-actions {
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+            }
+            .btn-link {
+                color: var(--primary);
+                text-decoration: none;
+                font-weight: 500;
+                padding: 0.5rem 1rem;
+                border-radius: 0.5rem;
+                transition: background-color 0.2s;
+            }
+            .btn-link:hover {
+                background: #e0e7ff;
+            }
+        </style>
 
         <div class="registration-container">
             {% if messages %}
@@ -106,39 +133,44 @@
 
             <form class="registration-form" method="post">
                 {% csrf_token %}
-                <div class="register-flex">
-                   <div class="form-group">
-                    <label for="first_name">First Name</label>
-                    <input type="text" id="first_name" name="first_name" required>
-                </div>
+                
                 <div class="form-group">
-                    <label for="last_name">Last Name</label>
-                    <input type="text" id="last_name" name="last_name" required>
-                </div> 
+                    <label for="team_id">Select Team</label>
+                    <select id="team_id" name="team_id" required>
+                        <option value="">-- Choose Team --</option>
+                        {% for team in teams %}
+                        <option value="{{ team.id }}">
+                            {{ team.team_name }} ({{ team.student_count }}/6 students)
+                            {% if team.is_complete %}[FULL]{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="student_name">Student Name</label>
+                    <input type="text" id="student_name" name="student_name" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="rfid_uid">ID Number</label>
-                    <input type="text" id="rfid_uid" name="rfid_uid" required>
+                    <label for="rfid_uid">RFID UID</label>
+                    <input type="text" id="rfid_uid" name="rfid_uid" required placeholder="Scan RFID card">
                 </div>
-                <div class="form-group">
-                    <label for="email">Email (optional)</label>
-                    <input type="email" id="email" name="email">
-                </div>
+
                 <button type="submit" class="btn-submit">Register Student</button>
             </form>
         </div>
 
         <!-- Registered Students Table -->
         <div class="students-table">
-            <h2>Registered Students</h2>
+            <h2>Registered Students ({{ students.count }})</h2>
             <div class="attendance-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID Number</th>
-                            <th>Name</th>
-                            <th>Email</th>
+                            <th>RFID UID</th>
+                            <th>Student Name</th>
+                            <th>Team</th>
                             <th>Registration Date</th>
                         </tr>
                     </thead>
@@ -146,9 +178,15 @@
                         {% for student in students %}
                         <tr>
                             <td>{{ student.rfid_uid }}</td>
-                            <td>{{ student.user.get_full_name }}</td>
-                            <td>{{ student.user.email|default:"-" }}</td>
-                            <td>{{ student.user.date_joined|date:"M d, Y" }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.team.team_name }}</td>
+                            <td>{{ student.registered_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">
+                                No students registered yet.
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
