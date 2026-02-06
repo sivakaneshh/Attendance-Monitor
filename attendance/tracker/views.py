@@ -553,7 +553,6 @@ def system_status(request):
                 'incomplete_teams': total_teams - complete_teams,
                 'total_students': total_students,
                 'total_attendance_logs': total_attendance_logs,
-                'max_teams_allowed': 25,
                 'students_per_team': 6
             },
             'timestamp': timezone.now().isoformat()
