@@ -35,6 +35,7 @@ urlpatterns = [
     path('', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/download-csv/', views.download_attendance_csv, name='download_attendance_csv'),
     path('teams/', views.team_management_page, name='teams'),
     path('registration/', views.registration_page, name='register_student'),
     path('attendance/', views.attendance_page, name='attendance'),

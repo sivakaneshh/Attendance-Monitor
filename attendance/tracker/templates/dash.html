@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Statistics</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/tracker/dashboard.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'tracker/dashboard.css' %}?v=2">
 </head>
 <body>
     <div class="dashboard-container">
@@ -17,6 +17,7 @@
                 <p class="text-secondary">{{ today|date:"l, F j, Y" }}</p>
             </div>
             <div class="header-actions">
+                <a href="{% url 'download_attendance_csv' %}" class="btn-download" title="Download CSV">⬇ Download CSV</a>
                 <a href="{% url 'teams' %}" class="btn-link">Manage Teams</a>
                 <a href="{% url 'register_student' %}" class="btn-link">Student Registration</a>
                 <a href="{% url 'attendance' %}" class="btn-link">Mark Attendance</a>
@@ -24,49 +25,23 @@
             </div>
         </div>
 
-        <style>
-            .header-actions {
-                display: flex;
-                gap: 1rem;
-                align-items: center;
-            }
-            .btn-link {
-                color: var(--primary);
-                text-decoration: none;
-                font-weight: 500;
-                padding: 0.5rem 1rem;
-                border-radius: 0.5rem;
-                transition: background-color 0.2s;
-            }
-            .btn-link:hover {
-                background: #e0e7ff;
-            }
-            .btn-logout {
-                color: #ef4444;
-                text-decoration: none;
-                font-weight: 500;
-                padding: 0.5rem 1rem;
-                border-radius: 0.5rem;
-                transition: background-color 0.2s;
-            }
-            .btn-logout:hover {
-                background: #fee2e2;
-            }
-        </style>
-
         <!-- Stats Grid -->
         <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Teams</h3>
+                <div class="value">{{ total_teams }}</div>
+            </div>
             <div class="stat-card">
                 <h3>Total Students</h3>
                 <div class="value">{{ total_students }}</div>
             </div>
             <div class="stat-card">
                 <h3>Present Today</h3>
-                <div class="value">{{ present_count }}</div>
+                <div class="value" style="color: #16a34a;">{{ present_count }}</div>
             </div>
             <div class="stat-card">
                 <h3>Absent Today</h3>
-                <div class="value">{{ absent_count }}</div>
+                <div class="value" style="color: #dc2626;">{{ absent_count }}</div>
             </div>
             <div class="stat-card">
                 <h3>Attendance Rate</h3>
@@ -74,11 +49,46 @@
             </div>
         </div>
 
-        <!-- Weekly Chart -->
-        <div class="chart-section">
-            <div class="chart-container">
-                <h3>Weekly Attendance Overview</h3>
-                <canvas id="weeklyChart"></canvas>
+        <!-- Team-wise Attendance Section -->
+        <div class="team-stats-section">
+            <div class="section-header">
+                <h2>Team-wise Attendance</h2>
+                <div class="section-controls">
+                    <select id="teamSort" class="sort-dropdown">
+                        <option value="alpha">Sort: A → Z</option>
+                        <option value="absent-desc">Sort: High Absents</option>
+                        <option value="absent-asc">Sort: Low Absents</option>
+                    </select>
+                    <input type="text" id="teamSearch" class="search-input" placeholder="Search team..." style="max-width:220px;">
+                </div>
+            </div>
+            <div class="team-cards-grid" id="teamCardsGrid">
+                {% for ts in team_stats %}
+                <div class="team-card" data-team="{{ ts.team.team_name|lower }}" data-absent="{{ ts.absent_count }}">
+                    <div class="team-card-header">
+                        <h3>{{ ts.team.team_name }}</h3>
+                        <span class="team-rate {% if ts.rate == 100 %}rate-full{% elif ts.rate == 0 %}rate-zero{% else %}rate-partial{% endif %}">
+                            {{ ts.rate }}%
+                        </span>
+                    </div>
+                    <div class="team-bar">
+                        <div class="team-bar-fill" style="width: {{ ts.rate }}%;"></div>
+                    </div>
+                    <div class="team-counts">
+                        <span class="count-present">{{ ts.present_count }} Present</span>
+                        <span class="count-absent">{{ ts.absent_count }} Absent</span>
+                        <span class="count-total">{{ ts.total }} Total</span>
+                    </div>
+                    <div class="team-students-detail">
+                        {% for s in ts.present_students %}
+                        <span class="student-chip chip-present" title="Present">✓ {{ s.name }}</span>
+                        {% endfor %}
+                        {% for s in ts.absent_students %}
+                        <span class="student-chip chip-absent" title="Absent">✗ {{ s.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
 
@@ -117,5 +127,49 @@
             </table>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const grid = document.getElementById('teamCardsGrid');
+            const searchInput = document.getElementById('teamSearch');
+            const sortSelect = document.getElementById('teamSort');
+
+            function getCards() {
+                return Array.from(grid.querySelectorAll('.team-card'));
+            }
+
+            // Search filter
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const query = this.value.toLowerCase();
+                    getCards().forEach(card => {
+                        const name = card.getAttribute('data-team');
+                        card.style.display = name.includes(query) ? '' : 'none';
+                    });
+                });
+            }
+
+            // Sort handler
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function() {
+                    const cards = getCards();
+                    const mode = this.value;
+
+                    cards.sort((a, b) => {
+                        if (mode === 'alpha') {
+                            return a.getAttribute('data-team').localeCompare(b.getAttribute('data-team'));
+                        } else if (mode === 'absent-desc') {
+                            return parseInt(b.getAttribute('data-absent')) - parseInt(a.getAttribute('data-absent'));
+                        } else if (mode === 'absent-asc') {
+                            return parseInt(a.getAttribute('data-absent')) - parseInt(b.getAttribute('data-absent'));
+                        }
+                        return 0;
+                    });
+
+                    cards.forEach(card => grid.appendChild(card));
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

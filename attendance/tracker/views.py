@@ -6,7 +6,8 @@ This module provides:
 1. HTML Interface Views - For browser-based management
 2. RESTful API endpoints - For RFID hardware integration
 """
-from django.http import JsonResponse
+import csv as csv_module
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -14,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Subquery, OuterRef, Exists
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
@@ -72,6 +73,31 @@ def dashboard(request):
     recent_records = AttendanceLog.objects.select_related(
         'student', 'student__team'
     ).order_by('-created_at')[:10]
+
+    # --- Team-wise attendance breakdown ---
+    # IDs of students who checked in today
+    present_student_ids = set(
+        AttendanceLog.objects.filter(
+            created_at__date=today, status='IN'
+        ).values_list('student_id', flat=True)
+    )
+
+    teams = Team.objects.prefetch_related('students').order_by('team_name')
+    team_stats = []
+    for team in teams:
+        students = list(team.students.all())
+        total = len(students)
+        present = [s for s in students if s.id in present_student_ids]
+        absent = [s for s in students if s.id not in present_student_ids]
+        team_stats.append({
+            'team': team,
+            'total': total,
+            'present_count': len(present),
+            'absent_count': len(absent),
+            'present_students': present,
+            'absent_students': absent,
+            'rate': round(len(present) / total * 100, 1) if total > 0 else 0,
+        })
     
     context = {
         'today': today,
@@ -80,9 +106,47 @@ def dashboard(request):
         'absent_count': absent_count,
         'attendance_rate': attendance_rate,
         'records': recent_records,
+        'team_stats': team_stats,
+        'total_teams': teams.count(),
     }
     
     return render(request, 'dash.html', context)
+
+
+@login_required(login_url='login')
+def download_attendance_csv(request):
+    """Download today's attendance summary as CSV."""
+    today = timezone.now().date()
+
+    present_student_ids = set(
+        AttendanceLog.objects.filter(
+            created_at__date=today, status='IN'
+        ).values_list('student_id', flat=True)
+    )
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="attendance_{today}.csv"'
+
+    writer = csv_module.writer(response)
+    writer.writerow(['Team', 'Student Name', 'RFID', 'Status', 'Last Action Time'])
+
+    teams = Team.objects.prefetch_related('students').order_by('team_name')
+    for team in teams:
+        for student in team.students.all().order_by('name'):
+            is_present = student.id in present_student_ids
+            last_log = AttendanceLog.objects.filter(
+                student=student, created_at__date=today
+            ).order_by('-created_at').first()
+            last_time = last_log.created_at.strftime('%H:%M:%S') if last_log else '-'
+            writer.writerow([
+                team.team_name,
+                student.name,
+                student.rfid_uid,
+                'Present' if is_present else 'Absent',
+                last_time,
+            ])
+
+    return response
 
 
 @login_required(login_url='login')
@@ -168,7 +232,7 @@ def attendance_page(request):
                 # Process tap using service
                 result = AttendanceService.process_rfid_tap(rfid_uid)
                 
-                student_name = result['student']['name']
+                student_name = result['student_name']
                 status = result['status']
                 
                 if status == 'IN':
