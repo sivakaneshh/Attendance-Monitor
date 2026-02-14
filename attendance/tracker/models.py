@@ -6,7 +6,7 @@ from django.utils import timezone
 class Team(models.Model):
     """
     Represents a team in the RFID attendance system.
-    Max 25 teams, each with exactly 6 students.
+    Each team can have up to 6 students.
     """
     team_name = models.CharField(max_length=100, unique=True)
     is_complete = models.BooleanField(default=False)
@@ -24,9 +24,7 @@ class Team(models.Model):
 
     def clean(self):
         """Validate team creation constraints."""
-        # Check if we already have 25 teams
-        if not self.pk and Team.objects.count() >= 25:
-            raise ValidationError("Maximum of 25 teams allowed.")
+        pass
 
     def save(self, *args, **kwargs):
         self.full_clean()

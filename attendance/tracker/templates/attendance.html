@@ -67,7 +67,72 @@
             .btn-link:hover {
                 background: #e0e7ff;
             }
+            
+            /* Live Count Stats */
+            .live-count-container {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+            .live-count-card {
+                background: var(--surface);
+                border-radius: 1rem;
+                padding: 1.5rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                transition: transform 0.2s;
+            }
+            .live-count-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .live-count-number {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin: 0.5rem 0;
+            }
+            .live-count-label {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            .count-in {
+                color: #16a34a;
+            }
+            .count-out {
+                color: #dc2626;
+            }
+            .count-total {
+                color: #6366f1;
+            }
+            .card-in {
+                border-left: 4px solid #16a34a;
+            }
+            .card-out {
+                border-left: 4px solid #dc2626;
+            }
+            .card-total {
+                border-left: 4px solid #6366f1;
+            }
         </style>
+
+        <!-- Live Count Stats -->
+        <div class="live-count-container">
+            <div class="live-count-card card-in">
+                <div class="live-count-label">Currently In</div>
+                <div class="live-count-number count-in">{{ in_count }}</div>
+            </div>
+            <div class="live-count-card card-out">
+                <div class="live-count-label">Currently Out</div>
+                <div class="live-count-number count-out">{{ out_count }}</div>
+            </div>
+            <div class="live-count-card card-total">
+                <div class="live-count-label">Total Students</div>
+                <div class="live-count-number count-total">{{ total_students }}</div>
+            </div>
+        </div>
 
         <!-- Attendance Form -->
         <div class="attendance-card">

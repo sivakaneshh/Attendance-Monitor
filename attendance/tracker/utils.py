@@ -7,6 +7,34 @@ from django.utils import timezone
 from .models import Team, Student, AttendanceLog
 
 
+class RFIDHelper:
+    """Helper utilities for RFID operations."""
+
+    @staticmethod
+    def normalize_rfid(rfid_uid):
+        """
+        Normalize RFID UID by removing leading zeros.
+        
+        Examples:
+            '0012345' -> '12345'
+            '00012345' -> '12345'
+            '12345' -> '12345'
+            '000' -> '0' (keeps at least one digit)
+        
+        Args:
+            rfid_uid (str): Raw RFID UID from reader
+            
+        Returns:
+            str: Normalized RFID UID without leading zeros
+        """
+        if not rfid_uid:
+            return rfid_uid
+        
+        # Strip leading zeros but keep at least one character
+        normalized = rfid_uid.lstrip('0') or '0'
+        return normalized
+
+
 class TeamValidator:
     """Validation utilities for team operations."""
 
@@ -48,6 +76,9 @@ class AttendanceService:
         Raises:
             ValidationError: If RFID is not registered
         """
+        # Normalize RFID UID (remove leading zeros)
+        rfid_uid = RFIDHelper.normalize_rfid(rfid_uid)
+        
         # Find student by RFID
         try:
             student = Student.objects.select_related('team').get(rfid_uid=rfid_uid)
@@ -100,6 +131,43 @@ class AttendanceService:
 
         return logs
 
+    @staticmethod
+    def get_live_count():
+        """
+        Get live count of students currently IN vs OUT.
+        
+        Logic:
+        - Every student is counted exactly once
+        - If last status is 'IN', student is counted as IN
+        - If last status is 'OUT' or never marked, student is counted as OUT
+        - total_students = in_count + out_count (always balanced)
+        
+        Returns:
+            dict: Contains 'in_count', 'out_count', and 'total_students'
+        """
+        from django.db.models import Subquery, OuterRef
+        
+        # Get the last attendance log ID for each student
+        last_log_subquery = AttendanceLog.objects.filter(
+            student=OuterRef('pk')
+        ).order_by('-created_at').values('status')[:1]
+        
+        # Annotate all students with their last attendance status
+        students_with_status = Student.objects.annotate(
+            last_status=Subquery(last_log_subquery)
+        ).values_list('last_status', flat=True)
+        
+        # Count students by status
+        in_count = sum(1 for status in students_with_status if status == 'IN')
+        out_count = sum(1 for status in students_with_status if status != 'IN')
+        total_students = Student.objects.count()
+        
+        return {
+            'in_count': in_count,
+            'out_count': out_count,
+            'total_students': total_students
+        }
+
 
 class RegistrationService:
     """Business logic for team and student registration."""
@@ -138,6 +206,9 @@ class RegistrationService:
         Raises:
             ValidationError: If validation fails
         """
+        # Normalize RFID UID (remove leading zeros)
+        rfid_uid = RFIDHelper.normalize_rfid(rfid_uid)
+        
         # Get team
         try:
             team = Team.objects.get(id=team_id)

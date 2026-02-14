@@ -164,7 +164,7 @@ def registration_page(request):
                 # Register student using service
                 student = RegistrationService.register_student(team_id, student_name, rfid_uid)
                 messages.success(request, f'Student {student_name} registered successfully!')
-                return redirect('registration')
+                return redirect('register_student')
                 
         except ValidationError as e:
             messages.error(request, str(e))
@@ -253,9 +253,15 @@ def attendance_page(request):
         created_at__date=today
     ).select_related('student', 'student__team').order_by('-created_at')
     
+    # Get live count of IN vs OUT
+    live_count = AttendanceService.get_live_count()
+    
     context = {
         'today': timezone.now(),
         'records': records,
+        'in_count': live_count['in_count'],
+        'out_count': live_count['out_count'],
+        'total_students': live_count['total_students'],
     }
     
     return render(request, 'attendance.html', context)
